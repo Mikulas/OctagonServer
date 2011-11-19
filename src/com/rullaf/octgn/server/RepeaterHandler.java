@@ -20,6 +20,16 @@ public class RepeaterHandler extends WebSocketHandler {
 		private Connection connection;
 
 		public void onOpen(Connection connection) {
+			// Tell all connected clients that new client has been opened so they can broadcast current status
+			for (ChatWebSocket webSocket : webSockets) {
+				try {
+					webSocket.connection.sendMessage("{\"method\": \"announce_join\", \"count\": " + (webSockets.size() + 1) + "}");
+				} catch (IOException e) {
+					// Error was detected, close the ChatWebSocket client side
+					this.connection.disconnect();
+				}
+			}
+			
 			// Client (Browser) WebSockets has opened a connection.
 			// 1) Store the opened connection
 			this.connection = connection;
@@ -28,6 +38,10 @@ public class RepeaterHandler extends WebSocketHandler {
 		}
 
 		public void onMessage(String data) {
+			if (data.equals("{\"method\": \"keep-alive\"}")) {
+				return;
+			}
+			
 			// Loop for each instance of ChatWebSocket to send message server to each client WebSockets.
 			try {
 				for (ChatWebSocket webSocket : webSockets) {
@@ -44,6 +58,16 @@ public class RepeaterHandler extends WebSocketHandler {
 		public void onClose(int closeCode, String message) {
 			// Remove ChatWebSocket in the global list of ChatWebSocket instance.
 			webSockets.remove(this);
+			
+			// Tell all remaining clients that this client left
+			for (ChatWebSocket webSocket : webSockets) {
+				try {
+					webSocket.connection.sendMessage("{\"method\": \"announce_leave\", \"count\": " + webSockets.size() + "}");
+				} catch (IOException e) {
+					// Error was detected, close the ChatWebSocket client side
+					this.connection.disconnect();
+				}
+			}
 		}
 	}
 }
