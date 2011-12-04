@@ -32,6 +32,10 @@ public class RepeaterHandler extends WebSocketHandler {
 			
 			return server.getName();
 		}
+		
+		public String getClientId() {
+			return connectMessage.getClientId();
+		}
 
 		public void onOpen(Connection connection) {
 			// Client (Browser) WebSockets has opened a connection.
@@ -100,7 +104,8 @@ public class RepeaterHandler extends WebSocketHandler {
 			try {
 				for (ChatWebSocket webSocket : webSockets) {
 					// send only if clients share server
-					if (webSocket.getServerName() != null && webSocket.getServerName().equals(server.getName())) {
+					if (webSocket.getServerName() != null && webSocket.getServerName().equals(server.getName())
+							&& getClientId() != webSocket.getClientId()) { // do not send to sender
 						webSocket.connection.sendMessage(data);
 					}
 				}
@@ -179,16 +184,20 @@ class Instance {
 
 class Message {
 	private String method;
+	private String client_id;
 	
 	public String getMethod() {
 		return method;
+	}
+	
+	public String getClientId() {
+		return client_id;
 	}
 }
 
 class ConnectMessage extends Message {
 	private String instance;
 	private String password;
-	private String client_id;
 	
 	public String getInstance() {
 		return instance;
@@ -196,9 +205,5 @@ class ConnectMessage extends Message {
 	
 	public String getPassword() {
 		return password;
-	}
-	
-	public String getClientId() {
-		return client_id;
 	}
 }
