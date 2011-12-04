@@ -78,7 +78,8 @@ public class RepeaterHandler extends WebSocketHandler {
 							// announce to all other clients on the same server instance
 							for (ChatWebSocket webSocket : webSockets) {				
 								try {
-									if (webSocket.getServerName() != null && webSocket.getServerName().equals(server.getName())) {
+									if (webSocket.getServerName() != null && webSocket.getServerName().equals(server.getName())
+											&& getClientId() != webSocket.getClientId()) { // do not send to joining player
 										webSocket.connection.sendMessage("{\"method\": \"announce_join\", \"count\": " + (webSockets.size() + 1) + "}");
 									}
 								} catch (IOException e) {
